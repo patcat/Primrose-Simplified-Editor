@@ -1,7 +1,7 @@
 var BRICK = "images/brick.png",
     GROUND = "images/deck.png",
     SKY = "images/bg2.jpg",
-    app = new Primrose.VRApplication("Our Simplified 3D Editor", {
+    app = new Primrose.BrowserEnvironment("Our Simplified 3D Editor", {
       skyTexture: SKY,
       groundTexture: GROUND
     }),
@@ -10,15 +10,28 @@ var BRICK = "images/brick.png",
     scriptUpdateTimeout,
     lastScript = null,
     scriptAnimate = null,
-    editorSphereY = app.avatarHeight - 0.25;
+    editorFrameMesh = null,
+    editorFrame = new Primrose.Surface({
+      bounds: new Primrose.Text.Rectangle(0, 0, 2048, 2048)
+    });
 
 app.addEventListener("ready", function() {
   app.scene.add(subScene);
 
-  editor = document.createElement("textarea");
-  editor.value = getSourceCode();
-  editor.style.transform = "translate3d(0, " + editorSphereY + "em, 0)";
-  editor = app.appendChild(editor);
+  editor = new Primrose.Text.Controls.TextBox({
+    bounds: new Primrose.Text.Rectangle(0, 0, editorFrame.surfaceWidth, Math.floor(editorFrame.surfaceHeight)),
+    tokenizer: Primrose.Text.Grammars.JavaScript,
+    value: getSourceCode(isInIFrame),
+    fontSize: 45
+  });
+
+  editorFrame.appendChild(editor);
+
+  editorFrameMesh = textured(shell(1, 16, 16), editorFrame);
+  editorFrameMesh.name = "MyWindow";
+  editorFrameMesh.position.set(0, app.avatarHeight, 0);
+  app.scene.add(editorFrameMesh);
+  app.registerPickableObject(editorFrameMesh);
 });
 
 app.addEventListener("update", function(dt) {
